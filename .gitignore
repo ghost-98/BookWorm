@@ -1,0 +1,7 @@
+# 가상환경
+BWvenv
+BWvenv.cmd
+
+# 파이썬 환경
+.idea
+__pycache__
