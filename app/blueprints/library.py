@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from app.models.library import Library
-from config import db
 
 library_bp = Blueprint('library', __name__)
 
@@ -29,26 +28,28 @@ def make_library():
 
 # 전체 서재 조회 API
 # jwt로 요청 유저의 id값 알 수 있는데 /<int:user_id> 써야하나 -> jwt가 우선됨. 보안상
-@library_bp.route('/<int:user_id>', methods=['GET'])
+@library_bp.route('/', methods=['GET'])
 @jwt_required()
 def get_library():
     user_id = get_jwt_identity()
 
     libraries = Library.query.filter_by(user_id=user_id).all()
-    return jsonify({"libraries": libraries}), 200
+    library_list = [library.to_dict() for library in libraries]
+
+    return jsonify({"libraries": library_list}), 200
 
 
 # 서재 수정 API
-@library_bp.route('/<int:folder_id>', methods=['PUT'])
+@library_bp.route('/<int:library_id>', methods=['PUT'])
 @jwt_required()
-def update_library(folder_id):
+def update_library(library_id):
     data = request.get_json()
     user_id = get_jwt_identity()
 
     name = data.get("name")
     desc = data.get("desc")
 
-    library = Library.query.filter_by(id=folder_id, user_id=user_id).first()
+    library = Library.query.filter_by(id=library_id, user_id=user_id).first()
 
     if not library:
         return jsonify({'error': '해당 서재를 찾을 수 없습니다'}), 404
@@ -63,11 +64,10 @@ def update_library(folder_id):
 
 # 서재 삭제 API
 # delete의 url 형식?
-@library_bp.route('/<id>', methods=['delete'])
+@library_bp.route('/<int:library_id>', methods=['DELETE'])
 @jwt_required()
-def delete_library():
+def delete_library(library_id):
     user_id = get_jwt_identity()
-    library_id = request.args.get("id")
 
     library = Library.query.filter_by(id=library_id, user_id=user_id).first()
 

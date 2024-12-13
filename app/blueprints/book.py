@@ -44,6 +44,8 @@ def search_isbn():
     params = {
         "cert_key": API_KEY,
         "result_style": "json",
+        "page_no": 1,
+        "page_size": 10,
         "isbn": isbn,
         # 필요한 추가 매개변수
     }
@@ -51,6 +53,12 @@ def search_isbn():
     response = requests.get(NATIONAL_LIBRARY_API_URL, params=params)
     if response.status_code != 200:
         return jsonify({"error": "검색하는데 실패했습니다"}), 500
+
+    try:
+        data = response.json()
+        return jsonify(data), 200
+    except ValueError:
+        return jsonify({"error": "잘못된 JSON 응답을 받았습니다"}), 500
 
 
 # 서재에 도서 추가 API
