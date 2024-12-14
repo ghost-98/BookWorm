@@ -1,0 +1,1 @@
+ C:\\bookworm_fe\\.dart_tool\\flutter_build\\e262fe643dbeaf800186914ac55747f8\\native_assets.yaml: 
