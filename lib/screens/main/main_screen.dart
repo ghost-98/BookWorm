@@ -34,8 +34,9 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.search), label: '책 검색'),
           BottomNavigationBarItem(icon: Icon(Icons.library_books), label: '내 서재'),
         ],
-        selectedItemColor: Colors.brown[700],
+        selectedItemColor: Colors.white,
         unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.brown[700],
       ),
     );
   }

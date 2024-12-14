@@ -320,20 +320,128 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 }
 
-class LibraryBooksScreen extends StatelessWidget {
+class LibraryBooksScreen extends StatefulWidget {
   final int libraryId;
 
   LibraryBooksScreen({required this.libraryId});
 
   @override
+  _LibraryBooksScreenState createState() => _LibraryBooksScreenState();
+}
+
+class _LibraryBooksScreenState extends State<LibraryBooksScreen> {
+  bool _isLoading = true;
+  List<dynamic> _books = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBooksInLibrary();
+  }
+
+  Future<void> _fetchBooksInLibrary() async {
+    final url = 'http://192.168.0.33:5000/library/${widget.libraryId}';
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+
+    if (token == null) {
+      Navigator.pushReplacementNamed(context, '/login');
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _books = data['books'];
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+        print('Error: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Error: $e');
+    }
+  }
+
+  Future<void> _deleteBookFromLibrary(int libraryId, int bookId) async {
+    final url = 'http://192.168.0.33:5000/library/$libraryId/book/$bookId';
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+
+    if (token == null) {
+      Navigator.pushReplacementNamed(context, '/login');
+      return;
+    }
+
+    try {
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 204) {
+        // 책 삭제 후, 해당 서재의 책 목록을 다시 불러오기
+        _fetchBooksInLibrary();
+      } else {
+        print('Error: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('서재 속 책 목록'),
+        centerTitle: false,
+        title: Text(
+          "Bookworm",
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: Colors.brown[700],
+        elevation: 0,
       ),
-      body: Center(
-        child: Text('서재 ID: $libraryId'),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _books.isEmpty
+          ? Center(child: Text('책이 없습니다.'))
+          : ListView.builder(
+        itemCount: _books.length,
+        itemBuilder: (context, index) {
+          final book = _books[index];
+          return ListTile(
+            title: Text(book['title'] ?? 'Unnamed Book'),
+            subtitle: Text(book['author'] ?? 'Unknown Author'),
+            trailing: IconButton(
+              icon: Icon(Icons.delete, color: Colors.red),
+              onPressed: () {
+                // 책 삭제 요청
+                _deleteBookFromLibrary(widget.libraryId, book['id']);
+              },
+            ),
+          );
+        },
       ),
     );
   }
