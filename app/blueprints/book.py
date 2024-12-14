@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
-from config import API_KEY, NATIONAL_LIBRARY_API_URL
-import requests
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+from app.models.library import Library
+from app.models.book import Book
 
 book_bp = Blueprint('book', __name__)
 
-# 두 검색 API 통합 하기
+'''# 두 검색 API 통합 하기
 
 # 도서 검색 API (제목)
 @book_bp.route('/search_title', methods=['GET'])
@@ -60,12 +62,7 @@ def search_isbn():
     except ValueError:
         return jsonify({"error": "잘못된 JSON 응답을 받았습니다"}), 500
 
+'''
 
-# 서재에 도서 추가 API
-@book_bp.route('/add_library', methods=['POST'])
-def add_library():
-    title = request.args.get('title', '').strip()
-
-# 서재의 모든 도서 조회 API
 
 # 서재에서 도서 삭제 API
